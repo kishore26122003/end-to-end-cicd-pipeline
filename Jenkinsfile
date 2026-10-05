@@ -32,15 +32,28 @@ pipeline {
                 }
             }
         }
+
+        stage('Deploy to EC2') {
+            steps {
+                sh '''
+                    ssh -o StrictHostKeyChecking=no ubuntu@172.31.0.152 "
+                        docker pull $DOCKER_IMAGE &&
+                        docker stop cicd-demo || true
+                        docker rm cicd-demo || true
+                        docker run -d --name cicd-demo -p 8080:8080 $DOCKER_IMAGE
+                    "
+                '''
+            }
+        }
     }
 
     post {
         success {
-            echo 'CI/CD Build and Docker Push Successful!'
+            echo 'CI/CD Build, Docker Push and Deployment Successful!'
         }
 
         failure {
-            echo 'CI/CD Build Failed!'
+            echo 'CI/CD Pipeline Failed!'
         }
     }
 }
